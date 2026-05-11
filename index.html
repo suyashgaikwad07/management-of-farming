@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Farmer Management Website</title>
+  <meta name="description" content="Farmer management dashboard for expenses, crops, materials, workers and weather." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: ['class', '[data-theme="dark"]'],
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Satoshi', 'Inter', 'sans-serif']
+          },
+          colors: {
+            farm: {
+              50: '#f3faf3',
+              100: '#e2f5e1',
+              200: '#c0e7bf',
+              300: '#94d793',
+              400: '#63bf65',
+              500: '#3e9d43',
+              600: '#2f7f35',
+              700: '#27652d',
+              800: '#225026',
+              900: '#1d421f'
+            }
+          },
+          boxShadow: {
+            soft: '0 10px 30px rgba(22, 48, 28, 0.10)'
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-[var(--color-bg)] text-[var(--color-text)] font-sans antialiased">
+  <a href="#mainContent" class="skip-link">Skip to content</a>
+
+  <div class="dashboard-shell">
+    <aside id="sidebar" class="sidebar-panel">
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-[var(--color-border)]">
+        <div class="logo-mark" aria-label="KrishiSetu logo">
+          <svg viewBox="0 0 48 48" class="h-11 w-11 text-farm-600" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="KrishiSetu">
+            <path d="M8 28C8 17.5066 16.5066 9 27 9C32.3378 9 37.1612 11.1996 40.5962 14.7387C34.1722 15.3233 28.8242 18.684 24.9803 24.1264C21.2333 29.4315 19.3101 35.0185 18.7562 39C12.4218 35.9647 8 32.1821 8 28Z" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M15 30C19.7589 28.6081 24.0476 27.9474 28 28C33.4211 28.0722 37.9956 29.4953 41 31" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            <path d="M24 24C24 24 22.5 31 24 39" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-xs uppercase tracking-[0.25em] text-[var(--color-text-muted)]" data-i18n="brandTag">Smart Farming</p>
+          <h1 class="text-lg font-black tracking-tight">KrishiSetu</h1>
+        </div>
+      </div>
+
+      <nav class="px-4 py-4" aria-label="Primary navigation">
+        <button class="nav-link active" data-section="dashboardSection"><span data-i18n="navDashboard">Dashboard</span></button>
+        <button class="nav-link" data-section="materialsSection"><span data-i18n="navMaterials">Materials</span></button>
+        <button class="nav-link" data-section="usageSection"><span data-i18n="navUsage">Farm Usage</span></button>
+        <button class="nav-link" data-section="cropsSection"><span data-i18n="navCrops">Crops</span></button>
+        <button class="nav-link" data-section="expensesSection"><span data-i18n="navExpenses">Expenses</span></button>
+        <button class="nav-link" data-section="workersSection"><span data-i18n="navWorkers">Workers</span></button>
+        <button class="nav-link" data-section="weatherSection"><span data-i18n="navWeather">Weather</span></button>
+        <button class="nav-link" data-section="reportsSection"><span data-i18n="navReports">Reports</span></button>
+        <button class="nav-link" data-section="settingsSection"><span data-i18n="navSettings">Settings</span></button>
+      </nav>
+
+      <div class="mx-4 mt-4 rounded-3xl bg-gradient-to-br from-farm-700 to-farm-500 text-white p-4 shadow-soft">
+        <p class="text-xs uppercase tracking-[0.2em] text-white/80" data-i18n="sidebarTips">Today Tips</p>
+        <h2 class="mt-2 text-base font-bold" data-i18n="tipTitle">Protect soil moisture</h2>
+        <p class="mt-2 text-sm text-white/85" data-i18n="tipText">Irrigate early morning and avoid spraying before strong wind.</p>
+      </div>
+    </aside>
+
+    <div class="content-shell">
+      <header class="topbar">
+        <div class="flex items-center gap-3">
+          <button id="menuToggle" class="icon-btn lg:hidden" aria-label="Open menu">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          <div>
+            <p class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]" data-i18n="pageLabel">Farm Control Panel</p>
+            <h2 class="text-xl font-bold tracking-tight" data-i18n="pageTitle">Farmer Management Dashboard</h2>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <label class="search-wrap" for="globalSearch">
+            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input id="globalSearch" type="search" placeholder="Search records..." data-i18n-placeholder="searchPlaceholder" />
+          </label>
+          <button id="languageToggle" class="action-pill" aria-label="Switch language">मराठी</button>
+          <button id="themeToggle" class="icon-btn" data-theme-toggle aria-label="Switch theme">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
+          <div class="profile-chip">
+            <div class="h-10 w-10 rounded-full bg-farm-100 text-farm-700 flex items-center justify-center font-bold">SG</div>
+            <div>
+              <p class="text-sm font-semibold">Farmer User</p>
+              <p class="text-xs text-[var(--color-text-muted)]" data-i18n="profileRole">Field Admin</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main id="mainContent" class="main-panel">
+        <section id="dashboardSection" class="page-section active-section">
+          <div class="hero-card">
+            <div>
+              <p class="eyebrow" data-i18n="dashboardWelcome">Overview</p>
+              <h3 class="section-title" data-i18n="dashboardHeading">Healthy farm decisions in one place</h3>
+              <p class="section-copy" data-i18n="dashboardCopy">Track expenses, crop progress, worker salary, materials and live weather from a single responsive dashboard.</p>
+            </div>
+            <div class="hero-actions">
+              <button class="btn-primary" data-open-modal="expenseModal" data-i18n="addExpenseBtn">Add Expense</button>
+              <button class="btn-secondary" data-open-modal="cropModal" data-i18n="addCropBtn">Add Crop</button>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <article class="stat-card">
+              <p class="stat-label" data-i18n="totalExpenses">Total Expenses</p>
+              <h4 id="totalExpensesValue" class="stat-value">₹0</h4>
+              <p class="stat-meta" data-i18n="monthSpend">This month spending</p>
+            </article>
+            <article class="stat-card">
+              <p class="stat-label" data-i18n="totalProfit">Crop Profit</p>
+              <h4 id="totalProfitValue" class="stat-value">₹0</h4>
+              <p class="stat-meta" data-i18n="profitMeta">Net expected return</p>
+            </article>
+            <article class="stat-card">
+              <p class="stat-label" data-i18n="materialsStock">Materials in Stock</p>
+              <h4 id="materialsStockValue" class="stat-value">0</h4>
+              <p class="stat-meta" data-i18n="stockMeta">Available purchase items</p>
+            </article>
+            <article class="stat-card">
+              <p class="stat-label" data-i18n="workerPending">Pending Salary</p>
+              <h4 id="workerPendingValue" class="stat-value">₹0</h4>
+              <p class="stat-meta" data-i18n="salaryMeta">Current balance due</p>
+            </article>
+          </div>
+
+          <div class="dashboard-grid">
+            <article class="panel-card">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow" data-i18n="analyticsLabel">Analytics</p>
+                  <h4 class="panel-title" data-i18n="expenseTrend">Expense Trend</h4>
+                </div>
+              </div>
+              <canvas id="expenseChart" height="180"></canvas>
+            </article>
+
+            <article class="panel-card">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow" data-i18n="weatherLabel">Weather</p>
+                  <h4 class="panel-title" data-i18n="currentWeather">Current Weather</h4>
+                </div>
+                <button class="text-sm text-farm-700 font-semibold" id="refreshWeatherBtn" data-i18n="refreshBtn">Refresh</button>
+              </div>
+              <div id="weatherWidget" class="weather-widget"></div>
+              <div id="forecastList" class="forecast-grid"></div>
+            </article>
+
+            <article class="panel-card">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow" data-i18n="activityLabel">Daily Work</p>
+                  <h4 class="panel-title" data-i18n="dailyActivities">Daily Activities</h4>
+                </div>
+              </div>
+              <ul id="activityList" class="list-stack"></ul>
+            </article>
+
+            <article class="panel-card">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow" data-i18n="purchaseLabel">Purchases</p>
+                  <h4 class="panel-title" data-i18n="recentPurchases">Recent Purchases</h4>
+                </div>
+              </div>
+              <div id="recentPurchasesList" class="list-stack"></div>
+            </article>
+          </div>
+        </section>
+
+        <section id="materialsSection" class="page-section hidden">
+          <div class="section-head-row">
+            <div>
+              <p class="eyebrow" data-i18n="materialsLabel">Material Purchase Management</p>
+              <h3 class="section-title" data-i18n="materialsTitle">Track purchase stock and suppliers</h3>
+            </div>
+            <button class="btn-primary" data-open-modal="materialModal" data-i18n="addMaterialBtn">Add Material</button>
+          </div>
+          <div class="toolbar-row">
+            <input id="materialSearch" class="field-input" type="search" placeholder="Search material or supplier" data-i18n-placeholder="materialSearchPlaceholder">
+            <select id="materialFilter" class="field-input">
+              <option value="all">All</option>
+              <option value="low">Low Stock</option>
+              <option value="recent">Recent</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th data-i18n="materialName">Material</th>
+                  <th data-i18n="quantity">Quantity</th>
+                  <th data-i18n="price">Price</th>
+                  <th data-i18n="supplier">Supplier</th>
+                  <th data-i18n="purchaseDate">Date</th>
+                  <th data-i18n="remainingStock">Remaining</th>
+                </tr>
+              </thead>
+              <tbody id="materialsTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="usageSection" class="page-section hidden">
+          <div class="section-head-row">
+            <div>
+              <p class="eyebrow" data-i18n="usageLabel">Farm Usage Tracking</p>
+              <h3 class="section-title" data-i18n="usageTitle">Monitor material use by crop</h3>
+            </div>
+            <button class="btn-primary" data-open-modal="usageModal" data-i18n="addUsageBtn">Add Usage</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th data-i18n="materialName">Material</th>
+                  <th data-i18n="cropName">Crop</th>
+                  <th data-i18n="quantity">Quantity</th>
+                  <th data-i18n="date">Date</th>
+                  <th data-i18n="notes">Notes</th>
+                </tr>
+              </thead>
+              <tbody id="usageTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="cropsSection" class="page-section hidden">
+          <div class="section-head-row">
+            <div>
+              <p class="eyebrow" data-i18n="cropTrackingLabel">Crop Tracking</p>
+              <h3 class="section-title" data-i18n="cropTrackingTitle">Manage crop lifecycle and profits</h3>
+            </div>
+            <button class="btn-primary" data-open-modal="cropModal" data-i18n="addCropBtn">Add Crop</button>
+          </div>
+          <div id="cropCardGrid" class="crop-grid"></div>
+        </section>
+
+        <section id="expensesSection" class="page-section hidden">
+          <div class="section-head-row">
+            <div>
+              <p class="eyebrow" data-i18n="expenseLabel">Expense Management</p>
+              <h3 class="section-title" data-i18n="expenseTitle">Record daily farming expenses</h3>
+            </div>
+            <button class="btn-primary" data-open-modal="expenseModal" data-i18n="addExpenseBtn">Add Expense</button>
+          </div>
+          <div class="dashboard-grid single-right">
+            <article class="panel-card">
+              <canvas id="expenseBreakdownChart" height="220"></canvas>
+            </article>
+            <article class="panel-card">
+              <div id="expenseList" class="list-stack"></div>
+            </article>
+          </div>
+        </section>
+
+        <section id="workersSection" class="page-section hidden">
+          <div class="section-head-row">
+            <div>
+              <p class="eyebrow" data-i18n="workerLabel">Worker Salary</p>
+              <h3 class="section-title" data-i18n="workerTitle">Attendance and salary reports</h3>
+            </div>
+            <button class="btn-primary" data-open-modal="workerModal" data-i18n="addWorkerBtn">Add Worker</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th data-i18n="workerName">Worker</th>
+                  <th data-i18n="attendance">Attendance</th>
+                  <th data-i18n="dailySalary">Daily Salary</th>
+                  <th data-i18n="monthlySalary">Monthly Salary</th>
+                  <th data-i18n="advancePayment">Advance</th>
+                  <th data-i18n="remainingSalary">Remaining</th>
+                </tr>
+              </thead>
+              <tbody id="workersTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="weatherSection" class="page-section hidden">
+          <div class="section-head-row">
+            <div>
+              <p class="eyebrow" data-i18n="weatherDashboardLabel">Weather Dashboard</p>
+              <h3 class="section-title" data-i18n="weatherDashboardTitle">Forecast and farming suggestions</h3>
+            </div>
+          </div>
+          <div class="dashboard-grid">
+            <article class="panel-card">
+              <div id="weatherDetails" class="weather-detail-grid"></div>
+            </article>
+            <article class="panel-card">
+              <h4 class="panel-title mb-4" data-i18n="farmingSuggestions">Farming Suggestions</h4>
+              <ul id="suggestionsList" class="list-stack"></ul>
+            </article>
+          </div>
+        </section>
+
+        <section id="reportsSection" class="page-section hidden">
+          <div class="section-head-row">
+            <div>
+              <p class="eyebrow" data-i18n="reportsLabel">Charts and Analytics</p>
+              <h3 class="section-title" data-i18n="reportsTitle">Monthly reports and exports</h3>
+            </div>
+            <div class="flex gap-3 flex-wrap">
+              <button id="exportJsonBtn" class="btn-secondary" data-i18n="exportExcel">Export Excel/JSON</button>
+              <button id="exportPdfBtn" class="btn-primary" data-i18n="exportPdf">Export PDF</button>
+            </div>
+          </div>
+          <div class="dashboard-grid">
+            <article class="panel-card"><canvas id="profitChart" height="180"></canvas></article>
+            <article class="panel-card"><canvas id="usageChart" height="180"></canvas></article>
+          </div>
+        </section>
+
+        <section id="settingsSection" class="page-section hidden">
+          <div class="section-head-row">
+            <div>
+              <p class="eyebrow" data-i18n="settingsLabel">Settings</p>
+              <h3 class="section-title" data-i18n="settingsTitle">Firebase and profile setup</h3>
+            </div>
+          </div>
+          <div class="settings-grid">
+            <article class="panel-card">
+              <h4 class="panel-title mb-4" data-i18n="firebaseConfigTitle">Firebase Configuration</h4>
+              <p class="section-copy" data-i18n="firebaseConfigText">Add your Firebase project keys in firebase.js and enable Email/Password authentication and Firestore.</p>
+              <pre class="code-block">const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};</pre>
+            </article>
+            <article class="panel-card">
+              <h4 class="panel-title mb-4" data-i18n="profileSettingsTitle">Profile Settings</h4>
+              <div class="form-grid">
+                <div>
+                  <label class="field-label" data-i18n="fullName">Full Name</label>
+                  <input class="field-input" type="text" placeholder="Farmer Name" />
+                </div>
+                <div>
+                  <label class="field-label" data-i18n="farmLocation">Farm Location</label>
+                  <input class="field-input" type="text" placeholder="Village / Taluka" />
+                </div>
+                <div>
+                  <label class="field-label" data-i18n="languagePreference">Language Preference</label>
+                  <select class="field-input"><option>English</option><option>मराठी</option></select>
+                </div>
+                <div>
+                  <label class="field-label" data-i18n="weatherCity">Weather City</label>
+                  <input id="cityInput" class="field-input" type="text" placeholder="Pune" />
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <dialog id="materialModal" class="app-modal">
+    <form class="modal-card" id="materialForm" method="dialog">
+      <div class="modal-head">
+        <h3 class="panel-title" data-i18n="addMaterialBtn">Add Material</h3>
+        <button type="button" class="icon-btn" data-close-modal="materialModal" aria-label="Close">✕</button>
+      </div>
+      <div class="form-grid">
+        <div><label class="field-label" data-i18n="materialName">Material</label><input required name="name" class="field-input" /></div>
+        <div><label class="field-label" data-i18n="quantity">Quantity</label><input required name="quantity" type="number" class="field-input" /></div>
+        <div><label class="field-label" data-i18n="price">Price</label><input required name="price" type="number" class="field-input" /></div>
+        <div><label class="field-label" data-i18n="supplier">Supplier</label><input required name="supplier" class="field-input" /></div>
+        <div><label class="field-label" data-i18n="purchaseDate">Date</label><input required name="purchaseDate" type="date" class="field-input" /></div>
+      </div>
+      <button class="btn-primary mt-4" type="submit" data-i18n="saveBtn">Save</button>
+    </form>
+  </dialog>
+
+  <dialog id="usageModal" class="app-modal">
+    <form class="modal-card" id="usageForm" method="dialog">
+      <div class="modal-head"><h3 class="panel-title" data-i18n="addUsageBtn">Add Usage</h3><button type="button" class="icon-btn" data-close-modal="usageModal">✕</button></div>
+      <div class="form-grid">
+        <div><label class="field-label" data-i18n="materialName">Material</label><input required name="material" class="field-input" /></div>
+        <div><label class="field-label" data-i18n="cropName">Crop</label><input required name="crop" class="field-input" /></div>
+        <div><label class="field-label" data-i18n="quantity">Quantity</label><input required name="quantity" type="number" class="field-input" /></div>
+        <div><label class="field-label" data-i18n="date">Date</label><input required name="date" type="date" class="field-input" /></div>
+        <div class="md:col-span-2"><label class="field-label" data-i18n="notes">Notes</label><textarea name="notes" class="field-input min-h-28"></textarea></div>
+      </div>
+      <button class="btn-primary mt-4" type="submit" data-i18n="saveBtn">Save</button>
+    </form>
+  </dialog>
+
+  <dialog id="cropModal" class="app-modal">
+    <form class="modal-card" id="cropForm" method="dialog">
+      <div class="modal-head"><h3 class="panel-title" data-i18n="addCropBtn">Add Crop</h3><button type="button" class="icon-btn" data-close-modal="cropModal">✕</button></div>
+      <div class="form-grid">
+        <div><label class="field-label" data-i18n="cropName">Crop</label><input required name="name" class="field-input" /></div>
+        <div><label class="field-label" data-i18n="sowingDate">Sowing Date</label><input required name="sowingDate" type="date" class="field-input" /></div>
+        <div><label class="field-label" data-i18n="harvestDate">Harvest Date</label><input required name="harvestDate" type="date" class="field-input" /></div>
+        <div><label class="field-label" data-i18n="cropStatus">Status</label><select name="status" class="field-input"><option>Growing</option><option>Ready</option><option>Harvested</option></select></div>
+        <div><label class="field-label" data-i18n="fertilizerTracking">Fertilizer</label><input name="fertilizer" class="field-input" /></div>
+        <div><label class="field-label" data-i18n="pesticideTracking">Pesticide</label><input name="pesticide" class="field-input" /></div>
+        <div><label class="field-label" data-i18n="waterUsage">Water Usage</label><input name="waterUsage" class="field-input" /></div>
+        <div><label class="field-label" data-i18n="cropProfit">Profit</label><input name="profit" type="number" class="field-input" /></div>
+        <div class="md:col-span-2"><label class="field-label" data-i18n="cropImage">Crop Image</label><input name="image" type="file" accept="image/*" class="field-input py-3" /></div>
+      </div>
+      <button class="btn-primary mt-4" type="submit" data-i18n="saveBtn">Save</button>
+    </form>
+  </dialog>
+
+  <dialog id="expenseModal" class="app-modal">
+    <form class="modal-card" id="expenseForm" method="dialog">
+      <div class="modal-head"><h3 class="panel-title" data-i18n="addExpenseBtn">Add Expense</h3><button type="button" class="icon-btn" data-close-modal="expenseModal">✕</button></div>
+      <div class="form-grid">
+        <div><label class="field-label" data-i18n="expenseType">Expense Type</label><select name="type" class="field-input"><option>Fuel</option><option>Water</option><option>Fertilizer</option><option>Labor</option><option>Equipment</option></select></div>
+        <div><label class="field-label" data-i18n="price">Amount</label><input required name="amount" type="number" class="field-input" /></div>
+        <div><label class="field-label" data-i18n="date">Date</label><input required name="date" type="date" class="field-input" /></div>
+        <div class="md:col-span-2"><label class="field-label" data-i18n="notes">Notes</label><textarea name="notes" class="field-input min-h-28"></textarea></div>
+      </div>
+      <button class="btn-primary mt-4" type="submit" data-i18n="saveBtn">Save</button>
+    </form>
+  </dialog>
+
+  <dialog id="workerModal" class="app-modal">
+    <form class="modal-card" id="workerForm" method="dialog">
+      <div class="modal-head"><h3 class="panel-title" data-i18n="addWorkerBtn">Add Worker</h3><button type="button" class="icon-btn" data-close-modal="workerModal">✕</button></div>
+      <div class="form-grid">
+        <div><label class="field-label" data-i18n="workerName">Worker Name</label><input required name="name" class="field-input" /></div>
+        <div><label class="field-label" data-i18n="attendance">Attendance</label><input required name="attendance" type="number" class="field-input" /></div>
+        <div><label class="field-label" data-i18n="dailySalary">Daily Salary</label><input required name="dailySalary" type="number" class="field-input" /></div>
+        <div><label class="field-label" data-i18n="advancePayment">Advance Payment</label><input required name="advance" type="number" class="field-input" /></div>
+      </div>
+      <button class="btn-primary mt-4" type="submit" data-i18n="saveBtn">Save</button>
+    </form>
+  </dialog>
+
+  <script type="module" src="firebase.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
